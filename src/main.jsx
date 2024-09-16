@@ -4,12 +4,14 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Home from "./pages/homePage/Home";
 import Product from "./pages/productsPage/Products";
 import PageNotFound from "./pages/404Page/PageNotFound";
+import Sale from "./pages/salePage/Sale";
 
 const router = createBrowserRouter([
   { path: "/", element: <Home /> },
   { path: "products", element: <Product /> },
+  { path: "sale", element: <Sale /> },
   // Page Not Found
-  { path: "*", element: <PageNotFound /> }
+  { path: "*", element: <PageNotFound /> },
 ]);
 
 createRoot(document.getElementById("root")).render(

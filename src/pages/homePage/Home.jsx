@@ -16,7 +16,7 @@ import { LuWarehouse } from "react-icons/lu";
 
 export default function Home() {
   const modules = [
-    { path: "/", text: "Продажа", logo: <TbShoppingCartDollar /> },
+    { path: "/sale", text: "Продажа", logo: <TbShoppingCartDollar /> },
     { path: "/", text: "Чеки", logo: <IoReceiptOutline /> },
     { path: "/", text: "Отложка", logo: <TbShoppingCartCog /> },
     { path: "/", text: "Клиенты", logo: <FaUsers /> },
@@ -30,14 +30,14 @@ export default function Home() {
     { path: "/", text: "Жалобы клиентов", logo: <TbNumber12Small /> },
   ];
   return (
-    <div>
+    <div className="bg-gray-100">
       <Navbar />
-      <section className="container flex flex-wrap justify-between gap-y-3 flex-1 my-4">
+      <section className="container flex flex-wrap justify-between gap-y-3 flex-1 py-4">
         {modules.map((item, index) => {
           return (
             <div
               key={index}
-              className="border min-w-[20vw] h-72 cursor-pointer p-4 text-center"
+              className=" min-w-[20vw] h-72 cursor-pointer p-4 text-center bg-white rounded-3xl hover:shadow-lg transition duration-250"
             >
               <Link
                 to={`${item.path}`}
@@ -46,7 +46,6 @@ export default function Home() {
                 <span className="text-[180px]">{item.logo}</span>
                 <h1>{item.text}</h1>
               </Link>
-              <div className=""></div>
             </div>
           );
         })}
