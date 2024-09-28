@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { IoSearchOutline } from "react-icons/io5";
 import { SpinnerCircular } from "spinners-react";
 import { Pagination } from "antd";
+import { ItemsFetchData } from "../../database/Api";
 
 export default function Products() {
   const [itemsData, setItemsData] = useState([]);
@@ -12,20 +12,19 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const getData = async () => {
+  const fetchData = async () => {
     try {
-      const response = await axios.get(`http://212.83.191.99:5000/items`);
-      setItemsData(response.data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      setError("Data fetching error");
-    } finally {
+      const result = await ItemsFetchData();
+      setItemsData(result);
+
       setLoading(false);
+    } catch {
+      setError(error);
     }
   };
 
   useEffect(() => {
-    getData();
+    fetchData();
   }, []);
 
   const filteredData = itemsData.filter((item) =>
@@ -80,11 +79,16 @@ export default function Products() {
           <p className="text-center text-red-500">{error}</p>
         ) : filteredData.length > 0 ? (
           <>
-            <ul className="my-4">
+            <ul className="my-4 flex flex-col gap-2">
               {paginatedData.map((item, index) => (
-                <li key={index} className="p-2 border-b">
-                  {(currentPage - 1) * itemsPerPage + index + 1} |{" "}
-                  {item.ItemName}
+                <li key={index} className="p-3 border-b bg-white rounded">
+                  <div className="flex justify-between">
+                    <span>
+                      {(currentPage - 1) * itemsPerPage + index + 1} |{" "}
+                      {item.ItemName}
+                    </span>
+                    <span>Magazin: {item.QuantityOnStockByCurrentWhs}</span>
+                  </div>
                 </li>
               ))}
             </ul>

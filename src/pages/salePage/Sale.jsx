@@ -1,199 +1,260 @@
-import { Select } from "antd";
-import axios from "axios";
 import { useEffect, useState } from "react";
-import { IoIosRemove, IoMdAdd } from "react-icons/io";
-import { IoSearchOutline } from "react-icons/io5";
-import { SpinnerCircular } from "spinners-react";
+import {
+  clientsFetchData,
+  ItemsFetchData,
+  ordersFetchData,
+} from "../../database/Api";
+import { SpinnerCircular, SpinnerInfinity } from "spinners-react";
+import { Message } from "primereact/message";
+// CSS
+import "./sale.css";
+import incrementLogo from "../../assets/ic_plus.png";
+import decrementLogo from "../../assets/ic_minus.png";
 
 export default function Sale() {
-  // <--- --->
+  // All data
+  const [clients, setClients] = useState(null);
+  const [orders, setOrders] = useState(null);
+  const [items, setItems] = useState([]);
+  const [cardName, setCardName] = useState(null);
+  const [priceList, setPriceList] = useState(null);
 
-  const [itemsData, setItemsData] = useState([]);
+  // CART
+  const [cart, setCart] = useState([]);
+
+  // Selected item
+  const [currentItem, setCurrentItem] = useState(null);
+  const [itemCount, setItemCount] = useState(1);
+  console.log(currentItem);
+
+  // SEND ORDERS
+  function handleOrdersPost() {
+    ordersFetchData((CardCode = cardName), (allProducts = cart));
+  }
+
+  // Filter
   const [search, setSearch] = useState("");
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const filteredData = items.filter((item) =>
+    item.ItemName.toLowerCase().includes(search.toLowerCase())
+  );
 
-  const getData = async () => {
+  // error
+  const [error, setError] = useState("");
+
+  // FETCH ---------------------------------------------
+  const fetchData = async () => {
     try {
-      const response = await axios.get(`http://212.83.191.99:5000/items`);
-      setItemsData(response.data);
+      // CLIENTS
+      const allClients = await clientsFetchData();
+      setClients(allClients);
+
+      // ITEMS
+      const allItems = await ItemsFetchData();
+      setItems(allItems);
     } catch (error) {
-      console.error("Error fetching data:", error);
-      setError("Data fetching error");
-    } finally {
-      setLoading(false);
+      console.log(error);
     }
   };
 
   useEffect(() => {
-    getData();
-  }, []);
+    fetchData();
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(""); 
+      }, 3000);
 
-  const filteredData = itemsData.filter((item) =>
-    item.ItemName.toLowerCase().includes(search.toLowerCase())
-  );
-  // <--- --->
-
-  // CLIENT AND PRICELIST SELECT
-  const onChangeClient = (value) => {
-    console.log(`selected ${value}`);
-  };
-
-  const onChangePriceList = (value) => {
-    console.log(`selected ${value}`);
-  };
-
-  // DISABLED INP VALUE
-  const [inpValue, setInpValue] = useState("");
-  const [amount, setAmount] = useState(1);
-  useEffect(() => {
-    setAmount(1);
-  }, [inpValue]);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   return (
-    <div className="bg-gray-100 h-[100vh] py-2 overflow-y-hidden">
-      <div className="container grid gap-5 grid-cols-3">
-        <div className="bg-white rounded-3xl p-3 flex flex-col gap-3">
-          <Select
-            className="w-full"
-            placeholder="Выберите клиент..."
-            optionFilterProp="label"
-            onChange={onChangeClient}
-            options={[
-              {
-                value: "jack",
-                label: "Jack",
-              },
-              {
-                value: "lucy",
-                label: "Lucy",
-              },
-              {
-                value: "tom",
-                label: "Tom",
-              },
-            ]}
-          />
-          <Select
-            className="w-full "
-            placeholder="Выберите прайс-лист..."
-            optionFilterProp="label"
-            onChange={onChangePriceList}
-            options={[
-              {
-                value: "Retail",
-                label: "Розница ",
-              },
-              {
-                value: "wholesale",
-                label: "Оптом",
-              },
-            ]}
-          />
-          <div className="h-[83vh]">
-            <div className="flex bg-gray-100 px-3 py-1 rounded-md ">
-              <input type="text" value={inpValue} disabled className="w-full" />
-              <button
-                onClick={() => {
-                  setInpValue("");
-                }}
+    <>
+      <div className="bg-gray-100 h-[100vh] w-full overflow-y-hidden grid grid-cols-3 gap-3 p-2">
+        <>
+          <div className="bg-white rounded p-4 w-full flex flex-col">
+            <div className="w-full flex flex-col gap-3">
+              <select
+                onChange={(e) => setCardName(e.target.value)}
+                className={`w-full p-2 rounded outline-none ${
+                  cardName === null
+                    ? "border border-red-500"
+                    : "border border-green-500"
+                }`}
               >
-                X
-              </button>
+                <option selected disabled>
+                  Выберите клиент...
+                </option>
+                {clients?.map((item, i) => (
+                  <option key={i} value={item.CardCode}>
+                    {item.CardName}
+                  </option>
+                ))}
+              </select>
+              <select
+                onChange={(e) => setPriceList(e.target.value)}
+                className={`w-full p-2 rounded outline-none ${
+                  priceList === null
+                    ? "border border-red-500"
+                    : "border border-green-500"
+                }`}
+              >
+                <option selected disabled>
+                  Выберите прайс-лист...
+                </option>
+                <option value="retail">Розница</option>
+                <option value="wholesale">Оптом</option>
+              </select>
             </div>
-            <div className="flex justify-around">
-              <div className="flex flex-col items-center">
-                <p className="text-[14px]">Кол-во</p>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => {
-                      setAmount((e) => e + 1);
-                    }}
-                    className="w-7 h-7 flex items-center justify-center border-green-500 text-green-500 border-4 rounded-lg"
-                  >
-                    <IoMdAdd />
-                  </button>
-                  <p>{amount}</p>
-                  <button
-                    onClick={() => {
-                      setAmount((prevAmount) => Math.max(1, prevAmount - 1));
-                    }}
-                    className="w-7 h-7 flex items-center justify-center border-red-500 text-red-500 border-4 rounded-lg"
-                  >
-                    <IoIosRemove />
-                  </button>
-                </div>
-              </div>
+            <div className="flex gap-3 mt-3">
+              <input
+                className="w-full flex-auto border rounded p-1"
+                type="text"
+                disabled
+                value={currentItem?.ItemName}
+              />
 
-              <div className="flex flex-col items-center justify-center">
-                <p className="text-[14px]">Цена</p>
-                <p>20000</p>
-              </div>
-            </div>
-            <div className="pt-3">
-              <div className="max-w-md mx-auto rounded-lg border px-3 bg-white">
-                <div className="flex items-center">
-                  <input
-                    type="text"
-                    placeholder="Поиск товаров..."
-                    className="w-full outline-none p-2"
-                    onChange={(e) => {
-                      setSearch(e.target.value);
+              <div className="flex gap-3">
+                <div className="flex items-center justify-center">
+                  <button
+                    className="flex items-center justify-center w-9 rounded h-9"
+                    disabled={!currentItem}
+                    onClick={() => {
+                      if (itemCount < currentItem.QuantityOnStockByCurrentWhs) {
+                        // Maxsus miqdorni cheklash
+                        setItemCount((prevCount) => prevCount + 1);
+                      } else {
+                        setError("Miqdor maksimumdan oshmasin");
+                      }
                     }}
-                    value={search}
+                  >
+                    <img src={incrementLogo} alt="+" />
+                  </button>
+
+                  <input
+                    min={1}
+                    max={currentItem?.QuantityOnStockByCurrentWhs}
+                    disabled={!currentItem}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      if (value > currentItem.QuantityOnStockByCurrentWhs) {
+                        // Maksimumni tekshirish
+                        setError("Miqdor maksimumdan oshmasin");
+                      } else if (value < 1) {
+                        // Kamida 1 bo'lishi kerak
+                        setError("Item count can't be less than 1");
+                      } else {
+                        setError(""); // Xatolikni tozalash
+                        setItemCount(value);
+                      }
+                    }}
+                    className="w-[50px] h-9 countItem outline-none items-center text-center"
+                    type="number"
+                    value={itemCount}
                   />
-                  <span className="ml-2 cursor-pointer">
-                    <IoSearchOutline />
-                  </span>
+
+                  <button
+                    className="flex items-center justify-center w-9 rounded h-9"
+                    disabled={!currentItem}
+                    onClick={() => {
+                      if (itemCount > 1) {
+                        setItemCount((prevCount) => prevCount - 1);
+                      } else {
+                        setError("Item count can't be less than 1");
+                      }
+                    }}
+                  >
+                    <img src={decrementLogo} alt="-" />
+                  </button>
                 </div>
               </div>
-              {loading ? (
-                <span className="h-[60vh] flex items-center justify-center">
-                  <SpinnerCircular
-                    size={70}
-                    thickness={155}
-                    speed={100}
-                    color="rgba(0, 0, 0, 1)"
-                    secondaryColor="rgba(0, 0, 0, 0.3)"
-                  />
-                </span>
-              ) : error ? (
-                <p className="text-center text-red-500">{error}</p>
-              ) : filteredData.length > 0 ? (
+            </div>
+            {error && (
+              <div className="z-30 absolute w-full flex items-center justify-center h-[20vh]">
+                <Message
+                  className="bg-red-200 rounded-lg p-4 flex items-center gap-2 w-fit text-red-500"
+                  severity="error"
+                  text={error}
+                />
+              </div>
+            )}
+            <div className="">
+              <p className="my-3 text-2xl font-bold text-center">TOVARLAR</p>
+              <input
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                }}
+                type="text"
+                className="border p-2 w-full mb-2"
+                placeholder="Search item..."
+              />
+              {cardName ? (
                 <>
-                  <ul className="my-4 h-[60vh] overflow-y-scroll overflow-x-hidden w-full ">
-                    {filteredData.map((item, index) => (
-                      <li
-                        key={index}
-                        className="p-2 border-b w-full cursor-pointer"
-                        onClick={() => {
-                          setInpValue(item.ItemName);
-                        }}
-                      >
-                        {item.ItemName}
-                      </li>
-                    ))}
-                  </ul>
+                  {items.length === 0 ? (
+                    <div className="flex items-center justify-center w-full h-[68vh]">
+                      <SpinnerCircular
+                        size={130}
+                        thickness={180}
+                        speed={100}
+                        color="rgba(0, 0, 0, 1)"
+                        secondaryColor="rgba(0, 0, 0, 0.22)"
+                      />
+                    </div>
+                  ) : filteredData.length > 0 ? (
+                    <ul className="h-[68vh] overflow-y-scroll flex flex-col gap-1 bg-gray-100 p-2 border">
+                      {filteredData.map((item, i) => (
+                        <li
+                          onClick={() => {
+                            item.QuantityOnStockByCurrentWhs > 0
+                              ? setCurrentItem(item)
+                              : console.log("mumknmas");
+                          }}
+                          className="border-b bg-white p-1 flex flex-col gap-1 cursor-pointer"
+                          key={i}
+                        >
+                          <div>{item.ItemName}</div>
+                          <div
+                            className={`py-1 px-2 ${
+                              item.QuantityOnStockByCurrentWhs === 0
+                                ? "bg-red-200"
+                                : "bg-green-200"
+                            } w-fit rounded`}
+                          >
+                            Магазин : {item.QuantityOnStockByCurrentWhs}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="flex items-center justify-center w-full h-[68vh]">
+                      <p>Topilmadi</p>
+                    </div>
+                  )}
                 </>
               ) : (
-                <p className="text-center">Tovarlar topilmadi</p>
+                <div className="flex items-center justify-center w-full h-[68vh]">
+                  <p>Выберите клиент...</p>
+                </div>
               )}
             </div>
           </div>
-        </div>
-        <div className="bg-white rounded-3xl p-3">
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquid
-          laudantium eveniet libero beatae ipsum. Tenetur quas numquam dolore
-          perferendis laboriosam, libero consectetur asperiores dolor officiis
-          ex non molestias quasi. Beatae.
-        </div>
-        <div className="bg-white rounded-3xl p-3">
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquid
-          laudantium eveniet libero beatae ipsum. Tenetur quas numquam dolore
-          perferendis laboriosam, libero consectetur asperiores dolor officiis
-          ex non molestias quasi. Beatae.
+          <div className="bg-white rounded p-4"></div>
+          <div className="bg-white rounded p-4"></div>
+        </>
+        <div
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          className={`absolute flex items-center justify-center bottom-0 left-0 h-[100vh] w-full ${
+            clients ? "hidden" : ""
+          }`}
+        >
+          <SpinnerInfinity
+            size={130}
+            thickness={180}
+            speed={100}
+            color="rgba(0, 0, 0, 1)"
+            secondaryColor="rgba(0, 0, 0, 0.22)"
+          />
         </div>
       </div>
-    </div>
+    </>
   );
 }
